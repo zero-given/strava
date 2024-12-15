@@ -292,7 +292,10 @@ export function StravaActivities() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   const connectStrava = () => {
-    window.location.href = 'http://localhost:5000/';
+    const clientId = '142519';
+    const redirectUri = encodeURIComponent('http://localhost:3000');
+    const scope = encodeURIComponent('activity:read_all,profile:read_all');
+    window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=${scope}`;
   };
 
   const retryConnection = () => {

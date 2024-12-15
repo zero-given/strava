@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  background-color: yellow !important;
+}
+
+html, body {
+  min-height: 100vh;
+  background-color: yellow !important;
+}
+
+body {
+  background-color: yellow !important;
+}
+
 .bg-grid-pattern {
   background-size: 40px 40px;
   background-image: 

@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body style={{ backgroundColor: 'yellow', minHeight: '100vh' }}>
         <Theme>
           {children}
         </Theme>

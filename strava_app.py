@@ -9,6 +9,10 @@ import time
 # Load environment variables
 load_dotenv()
 
+# API Keys - Securely loaded from environment variables
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
+
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-key')
 # Enable CORS with credentials support
