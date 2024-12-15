@@ -1,0 +1,6 @@
+google-generativeai
+python-dotenv
+elevenlabs
+sounddevice
+soundfile
+keyboard
