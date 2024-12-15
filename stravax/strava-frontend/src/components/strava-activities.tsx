@@ -378,7 +378,7 @@ export function StravaActivities() {
 
   if (error) {
     return (
-      <div className="text-center p-8 bg-white rounded-lg shadow-sm">
+      <div className="text-center p-8 bg-white rounded-lg shadow-sm border">
         <p className="text-red-600 mb-4">{error}</p>
         {!isAuthenticated && (
           <button
@@ -390,7 +390,7 @@ export function StravaActivities() {
         )}
         <button
           onClick={retryConnection}
-          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors ml-4"
         >
           Retry Connection
         </button>
@@ -398,77 +398,196 @@ export function StravaActivities() {
     );
   }
 
-  if (!activities || activities.length === 0) {
+  if (!activities.length) {
     return (
-      <div className="text-center p-4">
-        <p className="text-gray-500">No activities found</p>
+      <div className="text-center p-8 bg-white rounded-lg shadow-sm border">
+        <p className="text-gray-500 mb-4">No running activities found. Start tracking your runs with Strava!</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-[1fr,1.5fr] gap-8">
-      {/* Activities List */}
-      <div className="space-y-4 max-h-[600px] overflow-y-auto pr-4">
-        {activities.map((activity) => (
-          <div 
-            key={activity.id}
-            className={`p-4 rounded-lg cursor-pointer ${
-              selectedActivity?.id === activity.id ? 'bg-orange-100' : 'bg-white'
-            } hover:bg-orange-50`}
-            onClick={() => setSelectedActivity(activity)}
-          >
-            <div className="space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-lg text-gray-900">{activity.name}</h3>
-                  <span className="text-sm text-gray-500">
-                    {formatTimeAgo(activity.start_date_local)}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  {activity.kudos_count > 0 && (
-                    <Badge variant="secondary">
-                      {activity.kudos_count} kudos
-                    </Badge>
-                  )}
-                  {activity.achievement_count > 0 && (
-                    <Badge variant="secondary">
-                      {activity.achievement_count} achievements
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-500">Distance</p>
-                  <p className="font-medium text-gray-900">{(activity.distance / 1000).toFixed(2)} km</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Duration</p>
-                  <p className="font-medium text-gray-900">{Math.floor(activity.moving_time / 60)} min</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Pace</p>
-                  <p className="font-medium text-gray-900">{formatPace(activity.average_speed)}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Elevation</p>
-                  <p className="font-medium text-gray-900">{Math.round(activity.total_elevation_gain)} m</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+    <div className="space-y-8">
+      {/* Activity Stats */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="p-6 bg-white rounded-lg border">
+          <h3 className="text-sm font-medium text-gray-500">Total Distance</h3>
+          <p className="mt-2 text-3xl font-bold">
+            {(activities.reduce((acc, curr) => acc + curr.distance, 0) / 1000).toFixed(1)} km
+          </p>
+        </div>
+        <div className="p-6 bg-white rounded-lg border">
+          <h3 className="text-sm font-medium text-gray-500">Total Time</h3>
+          <p className="mt-2 text-3xl font-bold">
+            {Math.round(activities.reduce((acc, curr) => acc + curr.moving_time, 0) / 60)} min
+          </p>
+        </div>
+        <div className="p-6 bg-white rounded-lg border">
+          <h3 className="text-sm font-medium text-gray-500">Avg. Pace</h3>
+          <p className="mt-2 text-3xl font-bold">
+            {formatPace(activities.reduce((acc, curr) => acc + curr.average_speed, 0) / activities.length)}
+          </p>
+        </div>
+        <div className="p-6 bg-white rounded-lg border">
+          <h3 className="text-sm font-medium text-gray-500">Total Elevation</h3>
+          <p className="mt-2 text-3xl font-bold">
+            {Math.round(activities.reduce((acc, curr) => acc + curr.total_elevation_gain, 0))} m
+          </p>
+        </div>
       </div>
 
-      {/* Activity Details */}
+      {/* Selected Activity Details */}
       {selectedActivity && (
-        <div className="sticky top-4">
-          <ActivityDetail activity={selectedActivity} />
+        <div className="bg-white rounded-lg border p-6">
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">{selectedActivity.name}</h2>
+              <p className="text-gray-500">{formatTimeAgo(selectedActivity.start_date_local)}</p>
+            </div>
+            <div className="flex gap-2">
+              <Badge variant="secondary">
+                {selectedActivity.kudos_count} kudos
+              </Badge>
+              <Badge variant="secondary">
+                {selectedActivity.achievement_count} achievements
+              </Badge>
+            </div>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Activity Charts */}
+            <div className="space-y-6">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-500 mb-4">Elevation Profile</h3>
+                {selectedActivity.splits_metric && (
+                  <Line
+                    data={{
+                      labels: selectedActivity.splits_metric.map((_, i) => `${i + 1}km`),
+                      datasets: [
+                        {
+                          label: 'Elevation',
+                          data: selectedActivity.splits_metric.map(split => split.elevation_difference),
+                          borderColor: '#f97316',
+                          backgroundColor: '#fdba74',
+                          tension: 0.4,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: {
+                          display: false,
+                        },
+                      },
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          title: {
+                            display: true,
+                            text: 'Elevation (m)',
+                          },
+                        },
+                      },
+                    }}
+                  />
+                )}
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-500 mb-4">Pace Analysis</h3>
+                {selectedActivity.splits_metric && (
+                  <Bar
+                    data={{
+                      labels: selectedActivity.splits_metric.map((_, i) => `${i + 1}km`),
+                      datasets: [
+                        {
+                          label: 'Pace',
+                          data: selectedActivity.splits_metric.map(split => split.average_speed),
+                          backgroundColor: '#f97316',
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: {
+                          display: false,
+                        },
+                      },
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          title: {
+                            display: true,
+                            text: 'Pace (min/km)',
+                          },
+                        },
+                      },
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Activity Stats */}
+            <div className="grid gap-4 content-start">
+              <Card className="p-4">
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Distance</h3>
+                <p className="text-2xl font-bold">{(selectedActivity.distance / 1000).toFixed(2)} km</p>
+              </Card>
+              <Card className="p-4">
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Time</h3>
+                <p className="text-2xl font-bold">{Math.round(selectedActivity.moving_time / 60)} min</p>
+              </Card>
+              <Card className="p-4">
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Average Pace</h3>
+                <p className="text-2xl font-bold">{formatPace(selectedActivity.average_speed)}</p>
+              </Card>
+              <Card className="p-4">
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Elevation Gain</h3>
+                <p className="text-2xl font-bold">{Math.round(selectedActivity.total_elevation_gain)} m</p>
+              </Card>
+              {selectedActivity.average_heartrate && (
+                <Card className="p-4">
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">Average Heart Rate</h3>
+                  <p className="text-2xl font-bold">{Math.round(selectedActivity.average_heartrate)} bpm</p>
+                </Card>
+              )}
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Activity List */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {activities.map((activity) => (
+          <Card
+            key={activity.id}
+            className={`p-4 cursor-pointer transition-colors hover:border-orange-200 ${
+              selectedActivity?.id === activity.id ? 'border-orange-500' : ''
+            }`}
+            onClick={() => setSelectedActivity(activity)}
+          >
+            <h3 className="font-medium mb-2">{activity.name}</h3>
+            <div className="text-sm text-gray-500">{formatTimeAgo(activity.start_date_local)}</div>
+            <div className="mt-4 flex justify-between text-sm">
+              <div>
+                <div className="text-gray-500">Distance</div>
+                <div className="font-medium">{(activity.distance / 1000).toFixed(1)} km</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Time</div>
+                <div className="font-medium">{Math.round(activity.moving_time / 60)} min</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Pace</div>
+                <div className="font-medium">{formatPace(activity.average_speed)}</div>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
